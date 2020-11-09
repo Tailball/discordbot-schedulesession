@@ -68,8 +68,6 @@ const replySet = async (server, msg, components) => {
 
 const replyWhen = async (server, msg) => {
     const session = await getSession(server);
-    
-    console.log(session);
 
     if(!session) {
         msg.channel.send('No sessions planned!');

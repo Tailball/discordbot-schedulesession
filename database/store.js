@@ -2,7 +2,7 @@ const sessionModel = require('./sessionModel');
 
 
 const getSession = async server => {
-    const foundSession = await sessionModel.find({ server });
+    const foundSession = await sessionModel.findOne({ server });
 
     if(foundSession) return foundSession.dateTime;
     else return null;
