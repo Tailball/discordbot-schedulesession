@@ -242,9 +242,14 @@ const dayOfWeekToString = day => {
 }
 
 const dayOfMonthSuffix = day => {
-    if(day === 1) return 'st';
-    if(day === 2) return 'nd';
-    if(day === 3) return 'rd';
+    if(day === 1 || day === 21 || day === 31) 
+        return 'st';
+
+    if(day === 2 || day === 22) 
+        return 'nd';
+    if(day === 3 || day === 23) 
+        return 'rd';
+        
     return 'th';
 }
 
