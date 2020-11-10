@@ -1,4 +1,5 @@
 const moment = require('moment');
+const { MessageEmbed } = require('discord.js');
 
 const { getSession, setSession, clearSession } = require('./database/store');
 
@@ -37,21 +38,41 @@ const parseMessage = msg => {
         case 'when':
             replyWhen(server, msg);
             break;
+
+        case 'vote':
+            replyVote(msg);
+            break;
     }
 };
 
 
 const replyHelp = msg => {
-    msg.channel.send('Commands are: "help", "command", "commands", "alive", "clear", "set <yyyymmdd hhmm TIMEZONE>", "when"');
+    const embed = new MessageEmbed()
+        .setTitle('ℹ️ Help with commands')
+        .setColor(0x00ff00)
+        .addField('!tailball help', 'This displays all possible keywords.\nAlso works with command|commands.')
+        .addField('!tailball alive', 'This will send a marco-polo message to see if the bot is up and awake.')
+        .addField('!tailball clear', 'This will clear the active session for the current server.')
+        .addField('!tailball set', 'This will set the new session.\nFormat: <yyyymmdd hh:mm tz>.')
+        .addField('!tailball when', 'This will display the currently planned session.\nAlso works with the shorthand !when.')
+        .addField('!tailball vote', 'This will create a voting doodle for the coming week.');
+
+    msg.channel.send(embed);
 }
 
 const replyAlive = msg => {
-    msg.channel.send('I am alive!');
+    msg.channel.send('👾 I am alive! 👾');
 }
 
 const replyClear = async (server, msg) => {
     await clearSession(server);
-    msg.channel.send(`Cleared session for ${server}`);
+
+    const embed = new MessageEmbed()
+        .setTitle('❌ Session info')
+        .setColor(0x0000ff)
+        .setDescription(`Session was cleared for ${server}`);
+
+    msg.channel.send(embed);
 }
 
 const replySet = async (server, msg, components) => {
@@ -63,20 +84,50 @@ const replySet = async (server, msg, components) => {
     }
 
     await setSession(server, verifiedDate);
-    msg.channel.send(`Setting new session for ${server} at ${parseDate(verifiedDate.date)} ${parseTime(verifiedDate.time)} ${verifiedDate.timezone || 'UTC'}`);
+
+    const embed = new MessageEmbed()
+        .setTitle('✅ Session info')
+        .setColor(0x0000ff)
+        .setDescription(`Setting new session for ${server} at:\n**${parseDate(verifiedDate.date)} ${parseTime(verifiedDate.time)} ${verifiedDate.timezone || 'UTC'}**`);
+
+    msg.channel.send(embed);
 }
 
 const replyWhen = async (server, msg) => {
     const session = await getSession(server);
 
-    if(!session) {
-        msg.channel.send('No sessions planned!');
-        return;
-    }
+    let description = '';
 
-    msg.channel.send(`Next session for ${server} will be at ${parseDate(session.date)} ${parseTime(session.time)} ${session.timezone || 'UTC'}`);
+    if(!session) description = 'No sessions planned!';
+    else description = `Next session for ${server} will be at:\n**${parseDate(session.date)} ${parseTime(session.time)} ${session.timezone || 'UTC'}**`;
+
+    const embed = new MessageEmbed()
+        .setTitle('🗓 Session info')
+        .setColor(0xff0000)
+        .setDescription(description);
+    
+    msg.channel.send(embed);
 }
 
+const replyVote = async msg => {
+    const nextWeek = decideNextWeek();
+
+    const titleEmbed = new MessageEmbed()
+        .setColor(0x00ffff)
+        .setTitle('🗓 Vote now for the next session'.toUpperCase());
+
+    await msg.channel.send(titleEmbed);
+
+    nextWeek.forEach(async day => {
+        const embed = new MessageEmbed()
+            .setColor(0x00ffff)
+            .setDescription(`🗓 vote for **${day}**`);
+
+        const botMsg = await msg.channel.send(embed);
+        await botMsg.react('✅');
+        await botMsg.react('❌');
+    });
+}
 
 const verifySession = msg => {
     if(msg.length < 4) return null;
@@ -91,6 +142,27 @@ const verifySession = msg => {
 
     return { date, time, timezone };
 }
+
+const decideNextWeek = () => {
+    const now = moment();
+    
+    const dayOfWeek = now.weekday();
+    //const dayOfWeekName = getWeekdayName(dayOfWeek);
+  
+    const distToNextWeek = 8 - dayOfWeek;
+  
+    const returningWeek = [];
+    for(let i = 0; i < 7; i++) {
+        const newDay = moment()
+                        .add(distToNextWeek, 'day')
+                        .add(i, 'day');
+  
+        returningWeek.push(parseDate(newDay));
+    }
+  
+    return returningWeek;
+  }
+
 
 const parseDate = date => {
     const parsed = moment(date);
@@ -162,6 +234,7 @@ const dayOfWeekToString = day => {
         case 6:
             return 'Sat';
         case 7:
+        case 0:
             return 'Sun';
         default:
             return 'Invalid';
