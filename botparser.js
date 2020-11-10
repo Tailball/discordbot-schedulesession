@@ -63,7 +63,7 @@ const replySet = async (server, msg, components) => {
     }
 
     await setSession(server, verifiedDate);
-    msg.channel.send(`Setting new session for ${server} at ${parseDate(verifiedDate.date)} ${parseTime(verifiedDate.time)} UTC`);
+    msg.channel.send(`Setting new session for ${server} at ${parseDate(verifiedDate.date)} ${parseTime(verifiedDate.time)} ${verifiedDate.timezone || 'UTC'}`);
 }
 
 const replyWhen = async (server, msg) => {
@@ -74,7 +74,7 @@ const replyWhen = async (server, msg) => {
         return;
     }
 
-    msg.channel.send(`Next session for ${server} will be at ${parseDate(session.date)} ${parseTime(session.time)} UTC`);
+    msg.channel.send(`Next session for ${server} will be at ${parseDate(session.date)} ${parseTime(session.time)} ${session.timezone || 'UTC'}`);
 }
 
 
@@ -87,7 +87,9 @@ const verifySession = msg => {
     if(time.length !== 5) return null;
     if(!time.includes(':')) return null;
 
-    return { date, time };
+    const timezone = (msg.length === 5) ? msg[4] : null;
+
+    return { date, time, timezone };
 }
 
 const parseDate = date => {

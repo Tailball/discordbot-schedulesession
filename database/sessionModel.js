@@ -13,6 +13,10 @@ const sessionSchema = new mongoose.Schema({
         time: {
             type: String,
             required: true
+        },
+        timezone: {
+            type: String,
+            default: 'UTC'
         }
     }
 });
