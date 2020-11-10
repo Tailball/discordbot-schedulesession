@@ -42,7 +42,7 @@ const parseMessage = msg => {
 
 
 const replyHelp = msg => {
-    msg.channel.send('Commands are: "help", "command", "commands", "alive", "clear", "set <yyyymmdd hhmm>", "when"');
+    msg.channel.send('Commands are: "help", "command", "commands", "alive", "clear", "set <yyyymmdd hhmm TIMEZONE>", "when"');
 }
 
 const replyAlive = msg => {
@@ -58,7 +58,7 @@ const replySet = async (server, msg, components) => {
     const verifiedDate = verifySession(components);
 
     if(!verifiedDate) {
-        msg.channel.send('Could not set session. Incorrect format received. Expected "YYYYmmDD HH:MM".');
+        msg.channel.send('Could not set session. Incorrect format received. Expected "YYYYmmDD HH:MM TZ".');
         return;
     }
 
