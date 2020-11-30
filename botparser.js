@@ -1,7 +1,7 @@
 const moment = require('moment');
 const { MessageEmbed } = require('discord.js');
 
-const { getSession, setSession, clearSession } = require('./database/store');
+const { getSession, setSession, clearSession, setAccount } = require('./database/store');
 
 
 const parseMessage = msg => {
@@ -42,6 +42,10 @@ const parseMessage = msg => {
         case 'vote':
             replyVote(msg);
             break;
+
+        case 'setme':
+            replySetMe(server, msg, components);
+            break;
     }
 };
 
@@ -55,7 +59,8 @@ const replyHelp = msg => {
         .addField('!tailball clear', 'This will clear the active session for the current server.')
         .addField('!tailball set', 'This will set the new session.\nFormat: <yyyymmdd hh:mm tz>.')
         .addField('!tailball when', 'This will display the currently planned session.\nAlso works with the shorthand !when.')
-        .addField('!tailball vote', 'This will create a voting doodle for the coming week.');
+        .addField('!tailball vote', 'This will create a voting doodle for the coming week.')
+        .addfield('!tailball setme', 'This will set a local timezone offset from UTC for the user.\nFormat: -1, -2, +1, +2, etc.\nEg. setme +1 would set the local time to UTC+1.');
 
     msg.channel.send(embed);
 }
@@ -99,12 +104,21 @@ const replyWhen = async (server, msg) => {
     let description = '';
 
     if(!session) description = 'No sessions planned!';
-    else description = `Next session for ${server} will be at:\n**${parseDate(session.date)} ${parseTime(session.time)} ${session.timezone || 'UTC'}**`;
+    else {
+        sessionTime = session.sessionTime;
+        description = `Next session for ${server} will be at:\n**${parseDate(sessionTime.date)} ${parseTime(sessionTime.time)} ${sessionTime.timezone || 'UTC'}**`;
+    }
 
     const embed = new MessageEmbed()
         .setTitle('🗓 Session info')
         .setColor(0xff0000)
         .setDescription(description);
+
+    if(session && session.accounts) {
+        for(account of session.accounts) {
+            embed.addField(account.name, `UTC${account.timeZoneFromUTC}: ${parseOffset(session.sessionTime, account.timeZoneFromUTC)}`);
+        }
+    }
     
     msg.channel.send(embed);
 }
@@ -127,6 +141,27 @@ const replyVote = async msg => {
         await botMsg.react('✅');
         await botMsg.react('❌');
     });
+}
+
+const replySetMe = async (server, msg, components) => {
+    const offset = verifyOffset(components);
+
+    if(!offset) {
+        msg.channel.send('Could not set local timezone. Incorrect format received. Expected "-2, -1, +1, +2, etc.".');
+        return;
+    }
+
+    const id = msg.author.id;
+    const username = msg.author.username;
+
+    await setAccount(server, id, username, offset);
+
+    const embed = new MessageEmbed()
+        .setTitle('⏱ User timezone set')
+        .setColor(0x0000ff)
+        .setDescription(`Set local offset to UTC${offset} for user ${username}`);
+
+    msg.channel.send(embed);
 }
 
 const verifySession = msg => {
@@ -251,6 +286,24 @@ const dayOfMonthSuffix = day => {
         return 'rd';
         
     return 'th';
+}
+
+const verifyOffset = components => {
+    if(components.length !== 3) return null;
+    const offset = components[2];
+
+    if(offset.length !== 2) return null;
+    if(offset[0] !== '-' && offset[0] !== '+') return null;
+    if(!Number(offset[1])) return null;
+
+    return offset;
+}
+
+const parseOffset = (sessionTime, timeZoneFromUTC) => {
+    const time = moment(sessionTime.time, 'HH:mm');
+    time.add(Number(timeZoneFromUTC), 'hours');
+
+    return `${time.hour()}${time.hour() < 10 ? '0' : ''}:${time.minute()}${time.minute() < 10 ? '0' : '0'}`;
 }
 
 module.exports = parseMessage;

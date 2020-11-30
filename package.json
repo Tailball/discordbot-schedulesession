@@ -1,7 +1,7 @@
 {
   "name": "tailball-discord-schedulebot",
   "version": "1.0.0",
-  "description": "",
+  "description": "Run node bot to start. Deployed via Heroku.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
