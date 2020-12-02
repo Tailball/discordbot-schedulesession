@@ -65,9 +65,9 @@ const replyHelp = msg => {
         .addField('!tailball clear', 'This will clear the active session for the current server.')
         .addField('!tailball set', 'This will set the new session.\nFormat: <yyyymmdd hh:mm tz>.')
         .addField('!tailball when', 'This will display the currently planned session.\nAlso works with the shorthand !when.')
-        .addField('!tailball vote', 'This will create a voting doodle for the coming week.')
-        .addfield('!tailball setme', 'This will set a local timezone offset from UTC for the user.\nFormat: -1, -2, +1, +2, etc.\nEg. setme +1 would set the local time to UTC+1.')
-        .addField('!tailball joke', 'This will make the bot tell you a dad joke.');
+        .addField('!tailball vote', 'This will create a voting doodle for the coming week.');
+        // .addfield('!tailball setme', 'This will set a local timezone offset from UTC for the user.\nFormat: -1, -2, +1, +2, etc.\nEg. setme +1 would set the local time to UTC+1.')
+        // .addField('!tailball joke', 'This will make the bot tell you a dad joke.');
 
     msg.channel.send(embed);
 }
