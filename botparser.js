@@ -1,7 +1,9 @@
 const moment = require('moment');
 const { MessageEmbed } = require('discord.js');
+const axios = require('axios');
 
 const { getSession, setSession, clearSession, setAccount } = require('./database/store');
+const { default: Axios } = require('axios');
 
 
 const parseMessage = msg => {
@@ -45,6 +47,10 @@ const parseMessage = msg => {
 
         case 'setme':
             replySetMe(server, msg, components);
+            break;
+
+        case 'joke':
+            replyJoke(msg);
             break;
     }
 };
@@ -162,6 +168,26 @@ const replySetMe = async (server, msg, components) => {
         .setDescription(`Set local offset to UTC${offset} for user ${username}`);
 
     msg.channel.send(embed);
+}
+
+const replyJoke = (msg) => {
+    Axios.get('https://icanhazdadjoke.com/', 
+    {
+        headers: { "Accept": "application/json" }
+    })
+    
+    .then(result => {
+        const joke = result.data.joke;
+        
+        const embed = new MessageEmbed()
+            .setTitle('👀 Dad joke')
+            .setColor(0x00ffff)
+            .setDescription(`${joke} 😂`);
+
+            msg.channel.send(embed);
+    })
+
+    .catch(e => console.log(e));
 }
 
 const verifySession = msg => {
